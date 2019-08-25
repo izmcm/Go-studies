@@ -6,14 +6,27 @@ import (
 	"net"
 	"os"
 	"time"
+	"sync"
 )
 
-func benchmark() {
+var wg sync.WaitGroup
+
+func benchmark(text string, iterations int, num int, total int) {
+	lst := make([]time.Duration, 0, 0)
+
+	addr, err := net.ResolveUDPAddr("udp", "localhost:6000")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	conn, err := net.DialUDP("udp", nil, addr)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+
+	defer conn.Close()
 
 	for i := 0; i < 10000; i += 1 {
 		// fmt.Print("Text to send: ")
@@ -37,7 +50,7 @@ func benchmark() {
 
 		// receive
 		buffer := make([]byte, 1024)
-		n, _, err := conn.ReadFromUDP(buffer)
+		_, _, err := conn.ReadFromUDP(buffer)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -46,25 +59,13 @@ func benchmark() {
 		tm2 := time.Now()
 		diff := tm2.Sub(tm1)
 		lst = append(lst, diff)
-		fmt.Println("delay time: ", diff)
-		fmt.Println("Message from server: ", string(buffer[:n]))
+		fmt.Println("delay time for ", num, ": ", diff)
+		// fmt.Println("Message from server: ", string(buffer[:n]))
 	}
-}
-
-func main() {
-	lst := make([]time.Duration, 0, 0)
-
-	addr, err := net.ResolveUDPAddr("udp", "localhost:6000")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	text := "seja muito bem vindo a vida real\n"
-
 
 	// put in a csv
-	f, err := os.Create("benchmark_udp_1.csv")
+	name := fmt.Sprintf("UDP/benchmark_%d/benchmark_tcp_%d.csv", total, num)
+	f, err := os.Create(name)
 	if err != nil {
         panic(err)
     }
@@ -76,4 +77,22 @@ func main() {
 		// fmt.Println(dt)
 		f.Write([]byte(dt))
 	}
+
+
+	defer wg.Done()
+}
+
+func main() {
+
+	text := "seja muito bem vindo a vida real\n"
+	iterations := 10000
+	num := 6
+
+	wg.Add(num)
+
+	for i := 0; i < num; i += 1 {
+		go benchmark(text, iterations, i, num)
+	}
+
+	wg.Wait()
 }

@@ -9,7 +9,7 @@ import (
 func main() {
 	fmt.Println("Server TCP is running...")
 
-	ln, err := net.Listen("tcp", ":8081")
+	ln, err := net.Listen("tcp", ":8082")
 	if err != nil {
 		fmt.Println(err)
 		return

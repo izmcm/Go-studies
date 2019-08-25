@@ -16,7 +16,7 @@ func genTimes(text string, iterations int, num int, total int) {
 	lst := make([]time.Duration, 0, 0)
 	fmt.Println(num)
 
-	connection, err := net.Dial("tcp", "127.0.0.1:8081") // connect to localhost
+	connection, err := net.Dial("tcp", "127.0.0.1:8082") // connect to localhost
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -61,35 +61,18 @@ func genTimes(text string, iterations int, num int, total int) {
 	defer wg.Done()
 }
 
-func jt() {
-	defer wg.Done()
-}
-
 func main() {
 
 	// lst := make([]time.Duration, 0, 0)
 
 	text := "seja muito bem vindo a vida real\n"
 	iterations := 10000
-	num := 3
+	num := 6
 
-
-	// conn, err := net.Dial("tcp", "127.0.0.1:8081") // connect to localhost
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// }
-
-	// defer conn.Close()
 	wg.Add(num)
 
 	for i := 0; i < num; i += 1 {
 		go genTimes(text, iterations, i, num)
-		// go jt()
-		// go func(str string) {
-		// 	defer wg.Done()
-		// 	fmt.Println(str)
-		// }("vai goku")
 	}
 
 	wg.Wait()
