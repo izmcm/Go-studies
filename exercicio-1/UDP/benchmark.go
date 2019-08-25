@@ -8,22 +8,12 @@ import (
 	"time"
 )
 
-func main() {
-	lst := make([]time.Duration, 0, 0)
-
-	addr, err := net.ResolveUDPAddr("udp", "localhost:6000")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
+func benchmark() {
 	conn, err := net.DialUDP("udp", nil, addr)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-
-	text := "seja muito bem vindo a vida real\n"
 
 	for i := 0; i < 10000; i += 1 {
 		// fmt.Print("Text to send: ")
@@ -59,6 +49,18 @@ func main() {
 		fmt.Println("delay time: ", diff)
 		fmt.Println("Message from server: ", string(buffer[:n]))
 	}
+}
+
+func main() {
+	lst := make([]time.Duration, 0, 0)
+
+	addr, err := net.ResolveUDPAddr("udp", "localhost:6000")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	text := "seja muito bem vindo a vida real\n"
 
 
 	// put in a csv
