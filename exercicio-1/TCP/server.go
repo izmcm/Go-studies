@@ -4,28 +4,41 @@ import (
 	"bufio"
 	"fmt"
 	"net"
-	"strings"
 )
 
 func main() {
+	fmt.Println("Server is running...")
 
-	fmt.Println("Launching server...")
+	ln, err := net.Listen("tcp", ":8081")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
-	// listen on all interfaces
-	ln, _ := net.Listen("tcp", ":8081")
-
-	// accept connection on port
-	conn, _ := ln.Accept()
-
-	// run loop forever (or until ctrl-c)
 	for {
-		// will listen for message to process ending in newline (\n)
-		message, _ := bufio.NewReader(conn).ReadString('\n')
-		// output message received
-		fmt.Print("Message Received:", string(message))
-		// sample process for string received
-		newmessage := strings.ToUpper(message)
-		// send new string back to client
-		conn.Write([]byte(newmessage + "\n"))
+		conn, err := ln.Accept()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		// create thread
+		go doConnection(conn)
+	}
+}
+
+func doConnection(conn net.Conn) {
+	fmt.Println("Connect with ", conn.RemoteAddr().String())
+
+	for {
+		message, err := bufio.NewReader(conn).ReadString('\n')
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		fmt.Print("Message from ", conn.RemoteAddr().String(), ": ", string(message))
+
+		conn.Write([]byte(message + "\n"))
 	}
 }
