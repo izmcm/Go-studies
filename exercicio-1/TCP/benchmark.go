@@ -6,29 +6,32 @@ import (
 	"net"
 	"os"
 	"time"
+	"sync"
 )
 
-func main() {
+var wg sync.WaitGroup
 
+// func genTimes(text string, iterations int, num int, total int, connection) {
+func genTimes(text string, iterations int, num int, total int) {
 	lst := make([]time.Duration, 0, 0)
+	fmt.Println(num)
 
-	conn, err := net.Dial("tcp", "127.0.0.1:8081") // connect to localhost
+	connection, err := net.Dial("tcp", "127.0.0.1:8081") // connect to localhost
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+	defer connection.Close()
 
-	text := "seja muito bem vindo a vida real\n"
-
-	for i := 0; i < 10000; i += 1 {
+	for i := 0; i < iterations; i += 1 {
 		// fmt.Print("Text to send: ")
 
 		// send
 		tm1 := time.Now()
-		fmt.Fprintf(conn, text+"\n") // send to server
+		fmt.Fprintf(connection, text+"\n") // send to server
 
 		// receive
-		feedback, err := bufio.NewReader(conn).ReadString('\n')
+		_, err := bufio.NewReader(connection).ReadString('\n')
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -36,12 +39,13 @@ func main() {
 		tm2 := time.Now()
 		diff := tm2.Sub(tm1)
 		lst = append(lst, diff)
-		fmt.Println("delay time: ", diff)
-		fmt.Print("Message from server: " + feedback)
+		fmt.Println("delay time for ", num, ": ", diff)
+		// fmt.Print("Message from server: " + feedback)
 	}
 
 	// put in a csv
-	f, err := os.Create("benchmark1.csv")
+	name := fmt.Sprintf("TCP/benchmark_%d/benchmark_tcp_%d.csv", total, num)
+	f, err := os.Create(name)
 	if err != nil {
         panic(err)
     }
@@ -53,4 +57,40 @@ func main() {
 		// fmt.Println(dt)
 		f.Write([]byte(dt))
 	}
+
+	defer wg.Done()
+}
+
+func jt() {
+	defer wg.Done()
+}
+
+func main() {
+
+	// lst := make([]time.Duration, 0, 0)
+
+	text := "seja muito bem vindo a vida real\n"
+	iterations := 10000
+	num := 3
+
+
+	// conn, err := net.Dial("tcp", "127.0.0.1:8081") // connect to localhost
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
+
+	// defer conn.Close()
+	wg.Add(num)
+
+	for i := 0; i < num; i += 1 {
+		go genTimes(text, iterations, i, num)
+		// go jt()
+		// go func(str string) {
+		// 	defer wg.Done()
+		// 	fmt.Println(str)
+		// }("vai goku")
+	}
+
+	wg.Wait()
 }
