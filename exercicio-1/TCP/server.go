@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	fmt.Println("Server is running...")
+	fmt.Println("Server TCP is running...")
 
 	ln, err := net.Listen("tcp", ":8081")
 	if err != nil {

@@ -25,8 +25,10 @@ func main() {
 			return
 		}
 
+		// send
 		fmt.Fprintf(conn, text+"\n") // send to server
 
+		// receive
 		feedback, err := bufio.NewReader(conn).ReadString('\n')
 		if err != nil {
 			fmt.Println(err)
