@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"time"
 )
 
 func main() {
@@ -26,6 +27,7 @@ func main() {
 		}
 
 		// send
+		tm1 := time.Now()
 		fmt.Fprintf(conn, text+"\n") // send to server
 
 		// receive
@@ -34,7 +36,8 @@ func main() {
 			fmt.Println(err)
 			return
 		}
-
+		tm2 := time.Now()
+		fmt.Println("delay time: ", tm2.Sub(tm1))
 		fmt.Print("Message from server: " + feedback)
 	}
 }
