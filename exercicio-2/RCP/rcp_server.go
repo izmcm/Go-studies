@@ -9,8 +9,6 @@ package main
 // The method’s second argument is a pointer [X]
 // The method has return type error [X]
 
-// ˆˆˆˆˆˆˆˆˆˆˆˆ
-
 import (
 	"log"
 	"net"
