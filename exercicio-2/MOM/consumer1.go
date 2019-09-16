@@ -62,29 +62,23 @@ func consumeNumbers(receiveChannel <-chan amqp.Delivery, responseChannel *amqp.C
 		for d := range receiveChannel {
 			log.Printf("Received a message: %s", d.Body)
 
-			addTask := &AddTask{}
+			res := &Response{}
 
-			err := json.Unmarshal(d.Body, addTask)
+			err := json.Unmarshal(d.Body, res)
 
 			if err != nil {
 				log.Printf("Error decoding JSON: %s", err)
 			}
 
-			n1 := addTask.Number1
-			n2 := addTask.Number2
-			op := addTask.Operation
-			res := compute(n1, n2, op)
-			data := Response{Number: res, Opid: op}
-
 			// return the data
-			go outputNumbers(data, responseChannel)
-			log.Printf("Result of %d + %d is : %d", n1, n2, data)
+			log.Printf("Result of operation %d -> %d", res.Opid, res.Number)
 
 			if err := d.Ack(false); err != nil {
 				log.Printf("Error acknowledging message : %s", err)
 			} else {
 				log.Printf("Acknowledged message")
 			}
+
 		}
 	}()
 
@@ -127,7 +121,7 @@ func main() {
 	handleError(err, "Can't create a amqpChannel")
 	defer amqpChannel.Close()
 
-	calculatorQueue := createQueue("calculator", amqpChannel)
+	calculatorQueue := createQueue("ans", amqpChannel)
 	// ansQueue := createQueue("ans", amqpChannel)
 	createQueue("ans", amqpChannel)
 
