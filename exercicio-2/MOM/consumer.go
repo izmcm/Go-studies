@@ -5,15 +5,20 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sync"
 	// gopher_and_rabbit "github.com/masnun/gopher-and-rabbit"
 	"github.com/streadway/amqp"
 )
 
+// global variables
 var amqpURL string = "amqp://guest:guest@localhost:5672/"
+var wg sync.WaitGroup
 
 type AddTask struct {
-	Number1 int
-	Number2 int
+	Number1   int
+	Number2   int
+	Operation int
+	Opid      int
 }
 
 func handleError(err error, msg string) {
@@ -45,7 +50,7 @@ func consumeNumbers(messageChannel <-chan amqp.Delivery) {
 				log.Printf("Error decoding JSON: %s", err)
 			}
 
-			log.Printf("Result of %d + %d is : %d", addTask.Number1, addTask.Number2, addTask.Number1+addTask.Number2)
+			log.Printf("Operation %d -> %d + %d = %d", addTask.Opid, addTask.Number1, addTask.Number2, addTask.Number1+addTask.Number2)
 
 			if err := d.Ack(false); err != nil {
 				log.Printf("Error acknowledging message : %s", err)
@@ -58,6 +63,7 @@ func consumeNumbers(messageChannel <-chan amqp.Delivery) {
 
 	// Stop for program termination
 	<-stopChan
+	wg.Done()
 }
 
 func outputNumbers() {
@@ -95,5 +101,7 @@ func main() {
 	)
 	handleError(err, "Could not register consumer")
 
-	consumeNumbers(messageChannel)
+	wg.Add(1)
+	go consumeNumbers(messageChannel)
+	wg.Wait()
 }

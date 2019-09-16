@@ -12,9 +12,15 @@ import (
 
 var amqpURL string = "amqp://guest:guest@localhost:5672/"
 
+// 0 - add
+// 1 - sub
+// 2 - mul
+// 3 - div
 type AddTask struct {
-	Number1 int
-	Number2 int
+	Number1   int
+	Number2   int
+	Operation int
+	Opid      int
 }
 
 func handleError(err error, msg string) {
@@ -45,7 +51,7 @@ func main() {
 	// Random pra gerar os numeros pra colocar na fila
 	rand.Seed(time.Now().UnixNano())
 
-	addTask := AddTask{Number1: rand.Intn(999), Number2: rand.Intn(999)}
+	addTask := AddTask{Number1: rand.Intn(999), Number2: rand.Intn(999), Operation: 0, Opid: rand.Intn(99999)}
 	body, err := json.Marshal(addTask)
 	if err != nil {
 		handleError(err, "Error encoding JSON")
