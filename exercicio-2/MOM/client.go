@@ -14,6 +14,7 @@ import (
 
 var amqpURL string = "amqp://guest:guest@localhost:5672/"
 var wg sync.WaitGroup
+// var rct int = 0
 
 // 0 - add
 // 1 - sub
@@ -43,16 +44,16 @@ func createQueue(name string, channel *amqp.Channel) amqp.Queue {
 	return queue
 }
 
-func receiveData(receiveChannel <-chan amqp.Delivery) {
+func receiveData(receiveChannel <-chan amqp.Delivery, requests int) {
 	stopChan := make(chan bool)
-
+	rct := 0
+	
 	go func() {
 		log.Printf("Consumer ready, PID: %d", os.Getpid())
 		for d := range receiveChannel {
 			log.Printf("Received a message: %s", d.Body)
 
 			res := &Response{}
-
 			err := json.Unmarshal(d.Body, res)
 
 			if err != nil {
@@ -67,12 +68,48 @@ func receiveData(receiveChannel <-chan amqp.Delivery) {
 			} else {
 				log.Printf("Acknowledged message")
 			}
-
+			
+			rct += 1
+			if (rct == requests) {
+				close(stopChan)
+				
+			}
 		}
 	}()
 
 	// Stop for program termination
 	<-stopChan
+}
+
+func postData(channel *amqp.Channel, queue amqp.Queue, num int) {
+	for i := 0; i < num; i++ {
+		// Random pra gerar os numeros pra colocar na fila
+		rand.Seed(time.Now().UnixNano())
+	
+		addTask := AddTask{Number1: rand.Intn(999), Number2: rand.Intn(999), Operation: 0, Opid: rand.Intn(99999)}
+		body, err := json.Marshal(addTask)
+		if err != nil {
+			handleError(err, "Error encoding JSON")
+		}
+	
+		// TODO: Fazer o uso de json no outro middleware pra poder evitar problemas
+		// na comparação.
+	
+		// Zona de publish
+		err = channel.Publish("", queue.Name, false, false, amqp.Publishing{
+			DeliveryMode: amqp.Persistent,
+			ContentType:  "text/plain",
+			Body:         body,
+		})
+	
+		if err != nil {
+			log.Fatalf("Error publishing message: %s", err)
+		}
+	
+		// Agora precisa ver a resposta - AKA mete o code de consumer aqui
+	
+		log.Printf("AddTask: %d+%d", addTask.Number1, addTask.Number2)
+	}
 }
 
 func main() {
@@ -86,34 +123,24 @@ func main() {
 	defer amqpChannel.Close()
 
 	calculatorQueue := createQueue("calculator", amqpChannel)
-	// ansQueue := createQueue("ans", amqpChannel)
+	ansQueue := createQueue("ans", amqpChannel)
 	createQueue("ans", amqpChannel)
+	
+	// With a prefetch count greater than zero, the server will deliver that many messages to consumers before acknowledgments are received.
+	err = amqpChannel.Qos(1, 0, false)
+	handleError(err, "Could not configure QoS")
 
-	// Random pra gerar os numeros pra colocar na fila
-	rand.Seed(time.Now().UnixNano())
+	ansChannel, err := amqpChannel.Consume(
+		ansQueue.Name,
+		"",
+		false,
+		false,
+		false,
+		false,
+		nil,
+	)
+	handleError(err, "Could not register consumer")
 
-	addTask := AddTask{Number1: rand.Intn(999), Number2: rand.Intn(999), Operation: 0, Opid: rand.Intn(99999)}
-	body, err := json.Marshal(addTask)
-	if err != nil {
-		handleError(err, "Error encoding JSON")
-	}
-
-	// TODO: Fazer o uso de json no outro middleware pra poder evitar problemas
-	// na comparação.
-
-	// Zona de publish
-	err = amqpChannel.Publish("", calculatorQueue.Name, false, false, amqp.Publishing{
-		DeliveryMode: amqp.Persistent,
-		ContentType:  "text/plain",
-		Body:         body,
-	})
-
-	if err != nil {
-		log.Fatalf("Error publishing message: %s", err)
-	}
-
-	// Agora precisa ver a resposta - AKA mete o code de consumer aqui
-
-	log.Printf("AddTask: %d+%d", addTask.Number1, addTask.Number2)
-
+	postData(amqpChannel, calculatorQueue, 10)
+	receiveData(ansChannel, 10)
 }
