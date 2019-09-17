@@ -43,6 +43,9 @@ func compute(a int, b int, op int) int {
 		return a * b
 	}
 	if op == 3 {
+		if b == 0 {
+			return 0x3f3f3f3f
+		}
 		return a / b
 	}
 	return a + b
@@ -73,12 +76,26 @@ func consumeNumbers(receiveChannel <-chan amqp.Delivery, responseChannel *amqp.C
 			n1 := addTask.Number1
 			n2 := addTask.Number2
 			op := addTask.Operation
+			id := addTask.Opid
 			res := compute(n1, n2, op)
-			data := Response{Number: res, Opid: op}
+			data := Response{Number: res, Opid: id}
 
+			var s string
+			if op == 0 {
+				s = "+"
+			}
+			if op == 1 {
+				s = "-"
+			}
+			if op == 2 {
+				s = "*"
+			}
+			if op == 3 {
+				s = "/"
+			}
 			// return the data
 			go outputNumbers(data, responseChannel)
-			log.Printf("Result of %d + %d is : %d", n1, n2, data)
+			log.Printf("operation %d: %d %s %d = %d", id, n1, s, n2, res)
 
 			if err := d.Ack(false); err != nil {
 				log.Printf("Error acknowledging message : %s", err)

@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/csv"
 	"log"
 	"net/rpc"
-	"reflect"
+	"os"
+	"strconv"
 	"time"
 )
 
@@ -16,6 +18,8 @@ type AddTask struct {
 type Calculator struct {
 	Name string
 }
+
+var times [10000][]string
 
 //cacula o tempo
 func resolutionsWithTime(client *rpc.Client) int64 {
@@ -67,14 +71,36 @@ func main() {
 	// Create a TCP connection to localhost on port 1234
 	client, err := rpc.DialHTTP("tcp", "localhost:8085")
 	log.Println(client)
-
 	var quant = 10000
 	if err != nil {
 		log.Fatal("Connection error: ", err)
 	}
-	log.Println(reflect.TypeOf(client))
 	for i := 0; i < quant; i++ {
-		log.Println(resolutionsWithTime(client))
+		//times[i] = string{{strconv.FormatInt(resolutionsWithTime(client), 10)}, {"nano"}}
+		times[i] = []string{strconv.FormatInt(resolutionsWithTime(client), 10)}
 	}
+	for i := 0; i < quant; i++ {
+		log.Println(times[i])
+	}
+	creatFile()
+}
 
+func creatFileAndWrite() {
+
+	file, err := os.Create("result.csv")
+	checkError("Cannot create file", err)
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	for _, value := range times {
+		err := writer.Write(value)
+		checkError("Cannot write to file", err)
+	}
+}
+func checkError(message string, err error) {
+	if err != nil {
+		log.Fatal(message, err)
+	}
 }
