@@ -13,6 +13,8 @@ import (
 var amqpURL string = "amqp://guest:guest@localhost:5672/"
 var wg sync.WaitGroup
 
+var amqpQueues map[string]amqp.Queue = make(map[string]amqp.Queue)
+
 // 0 - add
 // 1 - sub
 // 2 - mul
@@ -22,6 +24,7 @@ type AddTask struct {
 	Number2   int
 	Operation int
 	Opid      int
+	ClientId  int
 }
 
 type Response struct {
@@ -75,6 +78,7 @@ func consumeNumbers(receiveChannel <-chan amqp.Delivery, responseChannel *amqp.C
 
 			n1 := addTask.Number1
 			n2 := addTask.Number2
+			cid := addTask.ClientId
 			op := addTask.Operation
 			id := addTask.Opid
 			res := compute(n1, n2, op)
@@ -94,7 +98,7 @@ func consumeNumbers(receiveChannel <-chan amqp.Delivery, responseChannel *amqp.C
 				s = "/"
 			}
 			// return the data
-			go outputNumbers(data, responseChannel)
+			go outputNumbers(data, responseChannel, cid)
 			log.Printf("operation %d: %d %s %d = %d", id, n1, s, n2, res)
 
 			if err := d.Ack(false); err != nil {
@@ -110,7 +114,7 @@ func consumeNumbers(receiveChannel <-chan amqp.Delivery, responseChannel *amqp.C
 	wg.Done()
 }
 
-func outputNumbers(data Response, responseChannel *amqp.Channel) {
+func outputNumbers(data Response, responseChannel *amqp.Channel, clientId int) {
 	body, err := json.Marshal(data)
 	if err != nil {
 		handleError(err, "Error encoding JSON")
@@ -120,7 +124,15 @@ func outputNumbers(data Response, responseChannel *amqp.Channel) {
 	// na comparação.
 
 	// Zona de publish
-	err = responseChannel.Publish("", "ans", false, false, amqp.Publishing{
+	channelName := fmt.Sprintf("Ans%d", clientId)
+	if _, ok := amqpQueues[channelName]; ok {
+
+	} else {
+		amqpQueues[channelName] = createQueue(channelName, responseChannel)
+	}
+
+	log.Println(channelName)
+	err = responseChannel.Publish("", channelName, false, false, amqp.Publishing{
 		DeliveryMode: amqp.Persistent,
 		ContentType:  "text/plain",
 		Body:         body,
@@ -144,9 +156,10 @@ func main() {
 	handleError(err, "Can't create a amqpChannel")
 	defer amqpChannel.Close()
 
-	calculatorQueue := createQueue("calculator", amqpChannel)
+	calculatorQueue := createQueue("Calculator", amqpChannel)
+
 	// ansQueue := createQueue("ans", amqpChannel)
-	createQueue("ans", amqpChannel)
+	// createQueue("ans", amqpChannel)
 
 	// With a prefetch count greater than zero, the server will deliver that many messages to consumers before acknowledgments are received.
 	err = amqpChannel.Qos(1, 0, false)

@@ -31,6 +31,7 @@ type AddTask struct {
 	Number2   int
 	Operation int
 	Opid      int
+	ClientId  int
 }
 
 type Response struct {
@@ -91,13 +92,14 @@ func receiveData(receiveChannel <-chan amqp.Delivery, requests int) {
 	wg.Done()
 }
 
-func postData(channel *amqp.Channel, queue amqp.Queue) {
+func postData(channel *amqp.Channel, queue amqp.Queue, clientId int) {
 	// Random pra gerar os numeros pra colocar na fila
-	rand.Seed(time.Now().UnixNano())
+	log.Println("data from client: ", clientId)
 
-	ID := rand.Intn(9999999)
-	addTask := AddTask{Number1: rand.Intn(999), Number2: rand.Intn(999), Operation: rand.Intn(4), Opid: ID}
+	ID := rand.Intn(99999)
+	addTask := AddTask{Number1: rand.Intn(999), Number2: rand.Intn(999), Operation: rand.Intn(4), Opid: ID, ClientId: clientId}
 	body, err := json.Marshal(addTask)
+	log.Printf("%+v\n", addTask)
 	if err != nil {
 		handleError(err, "Error encoding JSON")
 	}
@@ -123,8 +125,8 @@ func postData(channel *amqp.Channel, queue amqp.Queue) {
 	log.Printf("AddTask: %d+%d", addTask.Number1, addTask.Number2)
 }
 
-func creatFileAndWrite(times []time.Duration) {
-	file, _ := os.Create("result.csv")
+func creatFileAndWrite(times []time.Duration, clientId int) {
+	file, _ := os.Create(fmt.Sprintf("result%d.csv", clientId))
 	defer file.Close()
 
 	writer := csv.NewWriter(file)
@@ -142,6 +144,8 @@ func creatFileAndWrite(times []time.Duration) {
 }
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
+
 	conn, err := amqp.Dial(amqpURL)
 	handleError(err, "Can't connect to AMQP")
 	defer conn.Close()
@@ -151,9 +155,13 @@ func main() {
 
 	defer amqpChannel.Close()
 
-	calculatorQueue := createQueue("calculator", amqpChannel)
-	ansQueue := createQueue("ans", amqpChannel)
-	createQueue("ans", amqpChannel)
+	clientId := rand.Intn(99999)
+	channelName := fmt.Sprintf("Ans%d", clientId)
+	log.Println(channelName)
+
+	calculatorQueue := createQueue("Calculator", amqpChannel)
+	ansQueue := createQueue(channelName, amqpChannel)
+	// createQueue(fmt.Sprintf("ans%d", clientId), amqpChannel)
 
 	// With a prefetch count greater than zero, the server will deliver that many messages to consumers before acknowledgments are received.
 	err = amqpChannel.Qos(1, 0, false)
@@ -169,11 +177,12 @@ func main() {
 		nil,
 	)
 	handleError(err, "Could not register consumer")
-	n := 2000
+	n := 1000
 
 	for i := 0; i < n; i++ {
-		go postData(amqpChannel, calculatorQueue)
+		go postData(amqpChannel, calculatorQueue, clientId)
 	}
+
 	wg.Add(1)
 	go receiveData(ansChannel, n)
 	wg.Wait()
@@ -189,5 +198,5 @@ func main() {
 		times = append(times, diff)
 	}
 
-	creatFileAndWrite(times)
+	creatFileAndWrite(times, clientId)
 }
