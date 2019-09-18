@@ -58,7 +58,7 @@ func receiveData(receiveChannel <-chan amqp.Delivery, requests int) {
 	go func() {
 		log.Printf("Consumer ready, PID: %d", os.Getpid())
 		for d := range receiveChannel {
-			log.Printf("Received a message: %s", d.Body)
+			// log.Printf("Received a message: %s", d.Body)
 
 			res := &Response{}
 			err := json.Unmarshal(d.Body, res)
@@ -70,12 +70,12 @@ func receiveData(receiveChannel <-chan amqp.Delivery, requests int) {
 			}
 
 			// return the data
-			log.Printf("Result of operation %d -> %d", res.Opid, res.Number)
+			// log.Printf("Result of operation %d -> %d", res.Opid, res.Number)
 
 			if err := d.Ack(false); err != nil {
 				log.Printf("Error acknowledging message : %s", err)
 			} else {
-				log.Printf("Acknowledged message")
+				// log.Printf("Acknowledged message")
 			}
 
 			rct += 1
@@ -94,12 +94,12 @@ func receiveData(receiveChannel <-chan amqp.Delivery, requests int) {
 
 func postData(channel *amqp.Channel, queue amqp.Queue, clientId int) {
 	// Random pra gerar os numeros pra colocar na fila
-	log.Println("data from client: ", clientId)
+	// log.Println("data from client: ", clientId)
 
 	ID := rand.Intn(99999)
 	addTask := AddTask{Number1: rand.Intn(999), Number2: rand.Intn(999), Operation: rand.Intn(4), Opid: ID, ClientId: clientId}
 	body, err := json.Marshal(addTask)
-	log.Printf("%+v\n", addTask)
+	// log.Printf("%+v\n", addTask)
 	if err != nil {
 		handleError(err, "Error encoding JSON")
 	}
@@ -122,7 +122,7 @@ func postData(channel *amqp.Channel, queue amqp.Queue, clientId int) {
 
 	// Agora precisa ver a resposta - AKA mete o code de consumer aqui
 
-	log.Printf("AddTask: %d+%d", addTask.Number1, addTask.Number2)
+	// log.Printf("AddTask: %d+%d", addTask.Number1, addTask.Number2)
 }
 
 func creatFileAndWrite(times []time.Duration, clientId int) {
@@ -156,8 +156,9 @@ func main() {
 	defer amqpChannel.Close()
 
 	clientId := rand.Intn(99999)
+	// clientId :=os.Getpid()
 	channelName := fmt.Sprintf("Ans%d", clientId)
-	log.Println(channelName)
+	// log.Println(channelName)
 
 	calculatorQueue := createQueue("Calculator", amqpChannel)
 	ansQueue := createQueue(channelName, amqpChannel)
@@ -177,10 +178,10 @@ func main() {
 		nil,
 	)
 	handleError(err, "Could not register consumer")
-	n := 1000
+	n := 10000
 
 	for i := 0; i < n; i++ {
-		go postData(amqpChannel, calculatorQueue, clientId)
+		postData(amqpChannel, calculatorQueue, clientId)
 	}
 
 	wg.Add(1)
@@ -189,8 +190,8 @@ func main() {
 
 	times := []time.Duration{}
 	for key, value := range afterTime {
-		log.Println("\n")
-		log.Println(key)
+		// log.Println("\n")
+		// log.Println(key)
 		// log.Println(value)
 		// log.Println(beforeTime[key])
 

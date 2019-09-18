@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/csv"
+	"fmt"
 	"log"
+	"math/rand"
 	"net/rpc"
 	"os"
 	"strconv"
@@ -53,24 +55,32 @@ func resolutionsWithTime(client *rpc.Client) int64 {
 		Operation: 0,
 		Opid:      0,
 	}
+	id := rand.Intn(4)
 	start := time.Now()
-	client.Call("Calculator.Sum", v1, &response)
-	log.Println(v1, response)
-	client.Call("Calculator.Sub", v2, &response)
-	log.Println(v2, response)
-	client.Call("Calculator.Multiply", v3, &response)
-	log.Println(v3, response)
-	client.Call("Calculator.Divide", v4, &response)
-	log.Println(v4, response)
+	if id == 0 {
+		client.Call("Calculator.Sum", v1, &response)
+	} else if id == 1 {
+		// log.Println(v1, response)
+		client.Call("Calculator.Sub", v2, &response)
+	} else if id == 2 {
+		// log.Println(v2, response)
+		client.Call("Calculator.Multiply", v3, &response)
+	} else {
+		// log.Println(v3, response)
+		client.Call("Calculator.Divide", v4, &response)
+	}
+
+	// log.Println(v4, response)
 	now := time.Now()
 	timeAll, _ := time.ParseDuration(now.Sub(start).String())
 	return timeAll.Nanoseconds()
 }
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
 	// Create a TCP connection to localhost on port 1234
 	client, err := rpc.DialHTTP("tcp", "localhost:8085")
-	log.Println(client)
+	// log.Println(client)
 	var quant = 10000
 	if err != nil {
 		log.Fatal("Connection error: ", err)
@@ -79,15 +89,15 @@ func main() {
 		//times[i] = string{{strconv.FormatInt(resolutionsWithTime(client), 10)}, {"nano"}}
 		times[i] = []string{strconv.FormatInt(resolutionsWithTime(client), 10)}
 	}
-	for i := 0; i < quant; i++ {
-		log.Println(times[i])
-	}
-	creatFile()
+	// for i := 0; i < quant; i++ {
+	// 	log.Println(times[i])
+	// }
+	creatFileAndWrite()
 }
 
 func creatFileAndWrite() {
-
-	file, err := os.Create("result.csv")
+	id := rand.Intn(99999)
+	file, err := os.Create(fmt.Sprintf("result%d.csv", id))
 	checkError("Cannot create file", err)
 	defer file.Close()
 

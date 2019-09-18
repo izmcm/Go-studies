@@ -66,7 +66,7 @@ func consumeNumbers(receiveChannel <-chan amqp.Delivery, responseChannel *amqp.C
 	go func() {
 		log.Printf("Consumer ready, PID: %d", os.Getpid())
 		for d := range receiveChannel {
-			log.Printf("Received a message: %s", d.Body)
+			// log.Printf("Received a message: %s", d.Body)
 
 			addTask := &AddTask{}
 
@@ -83,28 +83,14 @@ func consumeNumbers(receiveChannel <-chan amqp.Delivery, responseChannel *amqp.C
 			id := addTask.Opid
 			res := compute(n1, n2, op)
 			data := Response{Number: res, Opid: id}
-
-			var s string
-			if op == 0 {
-				s = "+"
-			}
-			if op == 1 {
-				s = "-"
-			}
-			if op == 2 {
-				s = "*"
-			}
-			if op == 3 {
-				s = "/"
-			}
 			// return the data
 			go outputNumbers(data, responseChannel, cid)
-			log.Printf("operation %d: %d %s %d = %d", id, n1, s, n2, res)
+			// log.Printf("operation %d: %d %s %d = %d", id, n1, s, n2, res)
 
 			if err := d.Ack(false); err != nil {
 				log.Printf("Error acknowledging message : %s", err)
 			} else {
-				log.Printf("Acknowledged message")
+				// log.Printf("Acknowledged message")
 			}
 		}
 	}()
@@ -131,7 +117,7 @@ func outputNumbers(data Response, responseChannel *amqp.Channel, clientId int) {
 		amqpQueues[channelName] = createQueue(channelName, responseChannel)
 	}
 
-	log.Println(channelName)
+	// log.Println(channelName)
 	err = responseChannel.Publish("", channelName, false, false, amqp.Publishing{
 		DeliveryMode: amqp.Persistent,
 		ContentType:  "text/plain",
