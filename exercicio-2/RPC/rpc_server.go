@@ -47,39 +47,6 @@ func (c *Calculator) Divide(elements AddTask, result *int) error {
 	return nil
 }
 
-func testFunctions() {
-	c := new(Calculator)
-	var result int
-	log.Println("1. Sum: 1 + 2 = ", c.Sum(AddTask{
-		Number1:   1,
-		Number2:   2,
-		Operation: 0,
-		Opid:      0,
-	}, &result))
-	log.Println("> ", result)
-	log.Println("2. Sub: 4 - 1 = ", c.Sub(AddTask{
-		Number1:   4,
-		Number2:   1,
-		Operation: 0,
-		Opid:      0,
-	}, &result))
-	log.Println("> ", result)
-	log.Println("3. Multiply: 2*5 = ", c.Multiply(AddTask{
-		Number1:   2,
-		Number2:   5,
-		Operation: 0,
-		Opid:      0,
-	}, &result))
-	log.Println("> ", result)
-	log.Println("1. Divide: 4/2 = ", c.Divide(AddTask{
-		Number1:   4,
-		Number2:   2,
-		Operation: 0,
-		Opid:      0,
-	}, &result))
-	log.Println("> ", result)
-}
-
 // Bora dale kk
 func main() {
 	calc := new(Calculator)

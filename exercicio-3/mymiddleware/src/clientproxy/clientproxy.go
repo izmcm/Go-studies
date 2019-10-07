@@ -1,4 +1,4 @@
-package clientProxy
+package clientproxy
 
 // package main
 

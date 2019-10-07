@@ -2,16 +2,17 @@ package requestor
 
 import (
 	"crh"
+	// "fmt"
 	"marshaller"
 	"miop"
 	"shared"
 )
 
-type Requestor struct {
-}
+type Requestor struct{}
 
-func (Requestor) Invoke(inv shared.Invocation) interface{} {
+func (Requestor) Invoke(inv shared.Invocation) []interface{} {
 	marshallerInst := marshaller.Marshaller{}
+
 	crhInst := crh.CRH{ServerHost: inv.Host, ServerPort: inv.Port}
 
 	// Create request packet
@@ -31,5 +32,5 @@ func (Requestor) Invoke(inv shared.Invocation) interface{} {
 
 	r := miopPacketReply.Bd.RepBody.OperationResult
 
-	return r
+	return r.([]interface{})
 }

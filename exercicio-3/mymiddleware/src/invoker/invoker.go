@@ -1,10 +1,11 @@
 package invoker
 
 import (
-	// "fmt"
+	"fmt"
+	"impl"
 	"marshaller"
 	"miop"
-	"proxies"
+	// "proxies"
 	"shared"
 	"srh"
 )
@@ -12,23 +13,25 @@ import (
 type CalculatorInvoker struct{}
 
 func NewCalculatorInvoker() CalculatorInvoker {
-	// TODO
+	return CalculatorInvoker{}
 }
 
 func (CalculatorInvoker) Invoke() {
-	srhImpl := srh.SRH{ServerHost: "localhost", ServerPort: shared.CALCULATOR_PORT}
+	srhImpl := srh.SRH{ServerHost: shared.CALCULATOR_IP, ServerPort: shared.CALCULATOR_PORT, Conn: nil}
 	marshallerImpl := marshaller.Marshaller{}
 	calculatorImpl := impl.Calculadora{}
+	// calculatorImpl := proxies.CalculatorProxy(proxies.NewCalculatorProxy())
 	miopPacketReply := miop.Packet{}
 	replParams := make([]interface{}, 1)
 
 	for {
 		rcvMsgBytes := srhImpl.Receive()
-
-		miopPacketRequest := mashallerImpl.Unmarshall(rcvMsgBytes)
+		miopPacketRequest := marshallerImpl.Unmarshall(rcvMsgBytes)
 		operation := miopPacketRequest.Bd.ReqHeader.Operation
+		fmt.Println("operation detected: " + operation)
 
 		// TODO: talvez esteja errado
+		// TODO: fazer essas operações independentes da estrutura de operação
 		switch operation {
 		case "Add":
 			_p1 := int(miopPacketRequest.Bd.ReqBody.Body[0].(float64))
@@ -49,7 +52,7 @@ func (CalculatorInvoker) Invoke() {
 		}
 
 		repHeader := miop.ReplyHeader{Context: "", RequestId: miopPacketRequest.Bd.ReqHeader.RequestId, Status: 1}
-		RepBody := miop.ReplyBody{OperationResult: replParams}
+		repBody := miop.ReplyBody{OperationResult: replParams}
 		header := miop.Header{Magic: "MIOP", Version: "1.0", ByteOrder: true, MessageType: shared.MIOP_REQUEST}
 		body := miop.Body{RepHeader: repHeader, RepBody: repBody}
 		miopPacketReply = miop.Packet{Hdr: header, Bd: body}

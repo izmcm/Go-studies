@@ -1,15 +1,18 @@
 package proxies
 
 import (
-	"clientProxy"
+	"clientproxy"
+	// "fmt"
 	"requestor"
 	"shared"
 )
 
-type CalculatorProxy clientProxy.ClientProxy
+type CalculatorProxy clientproxy.ClientProxy
 
-func NewCalculatorProxy() CalculatorProxy {
-	// TODO
+func NewCalculatorProxy() clientproxy.ClientProxy {
+	// TODO: fazer uma inicialização com id arbitrário
+	cp := clientproxy.ClientProxy{Host: shared.CALCULATOR_IP, Port: shared.CALCULATOR_PORT, Id: 1, TypeName: "Calculadora"}
+	return cp
 }
 
 func (proxy CalculatorProxy) Add(p1 int, p2 int) int {
@@ -17,13 +20,14 @@ func (proxy CalculatorProxy) Add(p1 int, p2 int) int {
 	params := make([]interface{}, 2)
 	params[0] = p1
 	params[1] = p2
+
 	// Requestor preparation
 	request := shared.Request{Op: "Add", Params: params}
-	inv := shared.Invocation{Host: proxy.Proxy.Host, Port: proxy.Proxy.Port, Request: request}
+	inv := shared.Invocation{Host: proxy.Host, Port: proxy.Port, Request: request}
 
 	// invoke requestor
 	req := requestor.Requestor{}
-	ter := req.Invoke(inv).([]interface{})
+	ter := req.Invoke(inv)
 
 	return int(ter[0].(float64))
 }
@@ -36,11 +40,11 @@ func (proxy CalculatorProxy) Sub(p1 int, p2 int) int {
 
 	// Requestor preparation
 	request := shared.Request{Op: "Sub", Params: params}
-	inv := shared.Invocation{Host: proxy.Proxy.Host, Port: proxy.Proxy.Port, Request: request}
+	inv := shared.Invocation{Host: proxy.Host, Port: proxy.Port, Request: request}
 
 	// invoke requestor
 	req := requestor.Requestor{}
-	ter := req.Invoke(inv).([]interface{})
+	ter := req.Invoke(inv)
 
 	return int(ter[0].(float64))
 }
@@ -53,11 +57,11 @@ func (proxy CalculatorProxy) Mul(p1 int, p2 int) int {
 
 	// Requestor preparation
 	request := shared.Request{Op: "Mul", Params: params}
-	inv := shared.Invocation{Host: proxy.Proxy.Host, Port: proxy.Proxy.Port, Request: request}
+	inv := shared.Invocation{Host: proxy.Host, Port: proxy.Port, Request: request}
 
 	// invoke requestor
 	req := requestor.Requestor{}
-	ter := req.Invoke(inv).([]interface{})
+	ter := req.Invoke(inv)
 
 	return int(ter[0].(float64))
 }
@@ -70,11 +74,11 @@ func (proxy CalculatorProxy) Div(p1 int, p2 int) int {
 
 	// Requestor preparation
 	request := shared.Request{Op: "Div", Params: params}
-	inv := shared.Invocation{Host: proxy.Proxy.Host, Port: proxy.Proxy.Port, Request: request}
+	inv := shared.Invocation{Host: proxy.Host, Port: proxy.Port, Request: request}
 
 	// invoke requestor
 	req := requestor.Requestor{}
-	ter := req.Invoke(inv).([]interface{})
+	ter := req.Invoke(inv)
 
 	return int(ter[0].(float64))
 }
