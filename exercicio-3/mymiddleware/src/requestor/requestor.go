@@ -32,5 +32,8 @@ func (Requestor) Invoke(inv shared.Invocation) []interface{} {
 
 	r := miopPacketReply.Bd.RepBody.OperationResult
 
+	// fmt.Printf("\ntype: %T\n", r)
+	// fmt.Println("value:\n", r)
+
 	return r.([]interface{})
 }

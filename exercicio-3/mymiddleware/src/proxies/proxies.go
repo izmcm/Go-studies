@@ -82,3 +82,23 @@ func (proxy CalculatorProxy) Div(p1 int, p2 int) int {
 
 	return int(ter[0].(float64))
 }
+
+// Zone for LookupProxy
+
+// type LookupProxy clientproxy.ClientProxy
+
+// func (LookupProxy) Lookup(name string) clientproxy.ClientProxy {
+// 	// Client info
+// 	params := make([]interface{}, 1)
+// 	params[0] = name
+
+// 	// Requestor preparation
+// 	request := shared.Request{Op: "GetServer", Params: params}
+// 	inv := shared.Invocation{Host: proxy.Host, Port: proxy.Port, Request: request}
+
+// 	// invoke requestor
+// 	req := requestor.Requestor{}
+// 	ter := req.Invoke(inv)
+
+// 	return clientproxy.ClientProxy(ter[0])
+// }

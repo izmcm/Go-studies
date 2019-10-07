@@ -18,3 +18,6 @@ type Invocation struct {
 const MIOP_REQUEST int = 1
 const CALCULATOR_PORT int = 8081
 const CALCULATOR_IP string = "localhost"
+
+const NAMESERVER_PORT int = 8082
+const NAMESERVER_IP string = "localhost"

@@ -25,21 +25,21 @@ func (crh CRH) SendReceive(msgToServer []byte) []byte {
 		fmt.Println(err)
 		return []byte("error")
 	}
-	fmt.Println("Calculator client running in", addr)
-	fmt.Println(conn)
+	// fmt.Println("Calculator client running in", addr)
+	// fmt.Println(conn)
 
 	// send
 	fmt.Fprintf(conn, string(msgToServer)+"\n")
-	fmt.Println("send", string(msgToServer), "to server")
+	// fmt.Println("send", string(msgToServer), "to server")
 
 	// receive
 	feedback, err := bufio.NewReader(conn).ReadString('\n')
 	if err != nil {
-		fmt.Println("-------- deu ruim --------")
-		fmt.Println(err)
+		// fmt.Println("-------- deu ruim --------")
+		// fmt.Println(err)
 		return []byte("error")
 	}
-	fmt.Println("-------- deu bom --------")
+	// fmt.Println("-------- deu bom --------")
 
 	// lst := make([]byte, 3)
 	// return lst
