@@ -22,6 +22,8 @@ var err error
 
 func (srh *SRH) Receive() []byte {
 	addr := srh.ServerHost + ":" + strconv.Itoa(srh.ServerPort)
+	fmt.Printf("listening to addres: ")
+	fmt.Println(addr)
 
 	if srh.Conn == nil {
 		ln, err = net.Listen("tcp", addr)
@@ -41,7 +43,7 @@ func (srh *SRH) Receive() []byte {
 		return []byte("error")
 	}
 
-	// fmt.Println("connect with", conn)
+	fmt.Println("connect with", conn)
 	srh.Conn = &conn
 	// fmt.Printf("tipo: %T\n", conn)
 
@@ -60,10 +62,10 @@ func (srh *SRH) Send(msgToClient []byte) {
 	// fmt.Println("\n\n\nConnection")
 	// fmt.Println(conn)
 	// fmt.Println(srh.Conn)
-	// fmt.Println("vai enviar")
-	// fmt.Fprintf(conn, string(msgToClient)+"\n")
+	fmt.Println("vai enviar")
+	fmt.Fprintf(conn, string(msgToClient)+"\n")
 	fmt.Fprintf(*srh.Conn, string(msgToClient)+"\n")
-	// fmt.Println("enviou")
+	fmt.Println("enviou")
 
 	(*srh.Conn).Close()
 }

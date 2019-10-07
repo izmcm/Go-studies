@@ -24,10 +24,16 @@ func main() {
 }
 
 func simpleTest() {
-	namingServer := naming.NamingService{Repository: make(map[string]clientproxy.ClientProxy)}
-	namingServer.Register("Calculator", proxies.NewCalculatorProxy())
+	// namingServer := naming.NamingService{Repository: make(map[string]clientproxy.ClientProxy)}
+	// namingServer.Register("Calculator", proxies.NewCalculatorProxy())
 
-	calculator := proxies.CalculatorProxy(namingServer.Lookup("Calculator"))
+	lookup := proxies.NewLookupProxy()
+	calculator := proxies.CalculatorProxy(lookup.Lookup("Calculator"))
+	fmt.Printf("instance of ")
+	fmt.Printf("%T: ", calculator)
+	fmt.Println(calculator)
+
+	// calculator := proxies.CalculatorProxy(namingServer.Lookup("Calculator"))
 	REPETICOES := 3
 
 	for i := 0; i < REPETICOES; i++ {

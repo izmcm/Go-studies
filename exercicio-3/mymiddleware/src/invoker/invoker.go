@@ -1,7 +1,7 @@
 package invoker
 
 import (
-	// "fmt"
+	"fmt"
 	"impl"
 	"marshaller"
 	"miop"
@@ -19,7 +19,7 @@ func NewCalculatorInvoker() CalculatorInvoker {
 	return CalculatorInvoker{instCalc: impl.Calculadora{}}
 }
 
-func (calcInv CalculatorInvoker) Invoke() {
+func (calcInv *CalculatorInvoker) Invoke() {
 	srhImpl := srh.SRH{ServerHost: shared.CALCULATOR_IP, ServerPort: shared.CALCULATOR_PORT, Conn: nil}
 	marshallerImpl := marshaller.Marshaller{}
 	// calculatorImpl := impl.Calculadora{}
@@ -29,6 +29,10 @@ func (calcInv CalculatorInvoker) Invoke() {
 
 	for {
 		rcvMsgBytes := srhImpl.Receive()
+
+		fmt.Printf("did receive: ")
+		fmt.Println(rcvMsgBytes)
+
 		miopPacketRequest := marshallerImpl.Unmarshall(rcvMsgBytes)
 		operation := miopPacketRequest.Bd.ReqHeader.Operation
 		// fmt.Println("operation detected: " + operation)
@@ -72,13 +76,19 @@ type NameServerInvoker struct {
 	Register *naming.NamingService
 }
 
+func NewNameServerInvoker(service naming.NamingService) NameServerInvoker {
+	return NameServerInvoker{Register: &service}
+}
+
 func (nameInv NameServerInvoker) Invoke() {
+	fmt.Println("reading client data")
 	srhImpl := srh.SRH{ServerHost: shared.NAMESERVER_IP, ServerPort: shared.NAMESERVER_PORT, Conn: nil}
 	marshallerImpl := marshaller.Marshaller{}
 	// calculatorImpl := impl.Calculadora{}
 	service := *nameInv.Register
 	miopPacketReply := miop.Packet{}
 	replParams := make([]interface{}, 1)
+	fmt.Println("reading client data")
 
 	for {
 		rcvMsgBytes := srhImpl.Receive()
@@ -92,8 +102,9 @@ func (nameInv NameServerInvoker) Invoke() {
 		case "GetServer":
 			_name := miopPacketRequest.Bd.ReqBody.Body[0].(string)
 			replParams[0] = service.Lookup(_name)
+			fmt.Println(_name)
 		}
-		// fmt.Println(replParams[0])
+		fmt.Println(replParams[0])
 
 		repHeader := miop.ReplyHeader{Context: "", RequestId: miopPacketRequest.Bd.ReqHeader.RequestId, Status: 1}
 		repBody := miop.ReplyBody{OperationResult: replParams}

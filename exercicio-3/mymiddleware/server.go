@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	commonServer()
+	lookupServer()
 }
 
 func commonServer() {
@@ -34,5 +34,20 @@ func commonServer() {
 }
 
 func lookupServer() {
+	namingProxy := naming.NamingService{Repository: make(map[string]clientproxy.ClientProxy)}
+	lookupInvoker := invoker.NewNameServerInvoker(namingProxy)
 
+	go func() {
+		lookupInvoker.Invoke()
+	}()
+
+	calculator := proxies.NewCalculatorProxy()
+	namingProxy.Register("Calculator", calculator)
+
+	fmt.Println("Server up!")
+
+	calculatorInvoker := invoker.NewCalculatorInvoker()
+	calculatorInvoker.Invoke()
+
+	fmt.Scanln()
 }

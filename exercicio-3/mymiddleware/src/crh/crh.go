@@ -17,8 +17,9 @@ var conn net.Conn
 var err error
 
 // TODO: ver se é isso mesmo
-func (crh CRH) SendReceive(msgToServer []byte) []byte {
+func (crh *CRH) SendReceive(msgToServer []byte) []byte {
 	addr := crh.ServerHost + ":" + strconv.Itoa(crh.ServerPort)
+	fmt.Println("enviando para: ", addr)
 
 	conn, err := net.Dial("tcp", addr) // connect to localhost
 	if err != nil {

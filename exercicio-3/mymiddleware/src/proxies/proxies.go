@@ -2,7 +2,7 @@ package proxies
 
 import (
 	"clientproxy"
-	// "fmt"
+	"fmt"
 	"requestor"
 	"shared"
 )
@@ -85,20 +85,41 @@ func (proxy CalculatorProxy) Div(p1 int, p2 int) int {
 
 // Zone for LookupProxy
 
-// type LookupProxy clientproxy.ClientProxy
+type LookupProxy clientproxy.ClientProxy
 
-// func (LookupProxy) Lookup(name string) clientproxy.ClientProxy {
-// 	// Client info
-// 	params := make([]interface{}, 1)
-// 	params[0] = name
+func NewLookupProxy() LookupProxy {
+	// TODO: fazer uma inicialização com id arbitrário
+	cp := LookupProxy{Host: shared.NAMESERVER_IP, Port: shared.NAMESERVER_PORT, Id: 1, TypeName: "LookupTable"}
+	return cp
+}
 
-// 	// Requestor preparation
-// 	request := shared.Request{Op: "GetServer", Params: params}
-// 	inv := shared.Invocation{Host: proxy.Host, Port: proxy.Port, Request: request}
+func (proxy LookupProxy) Lookup(name string) clientproxy.ClientProxy {
+	// Client info
+	params := make([]interface{}, 1)
+	params[0] = name
 
-// 	// invoke requestor
-// 	req := requestor.Requestor{}
-// 	ter := req.Invoke(inv)
+	// Requestor preparation
+	request := shared.Request{Op: "GetServer", Params: params}
+	inv := shared.Invocation{Host: proxy.Host, Port: proxy.Port, Request: request}
 
-// 	return clientproxy.ClientProxy(ter[0])
-// }
+	// invoke requestor
+	req := requestor.Requestor{}
+	ter := req.Invoke(inv)
+	fmt.Printf("recebido o dado: ")
+	fmt.Println(ter)
+
+	res := ter[0].(map[string]interface{})
+	fmt.Printf("\ntype: %T\n", res)
+	fmt.Println("value:\n", res)
+	h := res["Host"].(string)
+	p := int(res["Port"].(float64))
+	i := int(res["Id"].(float64))
+	t := res["TypeName"].(string)
+	data := clientproxy.ClientProxy{Host: h, Port: p, Id: i, TypeName: t}
+
+	fmt.Printf("\ntype: %T\n", data)
+	fmt.Println("value:\n", data)
+
+	return data
+	// return ter[0].(map[string]interface{}).(map[string]clientproxy.ClientProxy)
+}

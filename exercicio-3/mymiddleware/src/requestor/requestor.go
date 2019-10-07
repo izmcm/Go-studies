@@ -2,7 +2,7 @@ package requestor
 
 import (
 	"crh"
-	// "fmt"
+	"fmt"
 	"marshaller"
 	"miop"
 	"shared"
@@ -14,6 +14,8 @@ func (Requestor) Invoke(inv shared.Invocation) []interface{} {
 	marshallerInst := marshaller.Marshaller{}
 
 	crhInst := crh.CRH{ServerHost: inv.Host, ServerPort: inv.Port}
+	fmt.Printf("instance: ")
+	fmt.Println(crhInst)
 
 	// Create request packet
 	// TODO: Randomize the requestId or make an algorithm to make it work
@@ -27,13 +29,15 @@ func (Requestor) Invoke(inv shared.Invocation) []interface{} {
 	msgToClientBytes := marshallerInst.Marshall(miopPacketRequest)
 
 	// Send Request Packet and receive reply
+	fmt.Println("preparando pra enviar")
 	msgFromServerBytes := crhInst.SendReceive(msgToClientBytes)
+	fmt.Println("recebidos")
 	miopPacketReply := marshallerInst.Unmarshall(msgFromServerBytes)
 
 	r := miopPacketReply.Bd.RepBody.OperationResult
 
-	// fmt.Printf("\ntype: %T\n", r)
-	// fmt.Println("value:\n", r)
+	fmt.Printf("\ntype: %T\n", r)
+	fmt.Println("value:\n", r)
 
 	return r.([]interface{})
 }
